@@ -6,8 +6,10 @@ env:
     DOCKER_REGISTRY_PASSWORD: /myapp/docker-creds/password
     DOCKER_REGISTRY_URL: /myapp/docker-creds/docker_registry_url
   variables:
-    IMAGE_REPO_NAME: simple-python-flask-app
+    IMAGE_REPO_NAME: simple-python
     IMAGE_TAG: latest
+    AWS_DEFAULT_REGION: ap-south-1
+    AWS_ACCOUNT_ID: 545627228144
 
 phases:
   install:
@@ -17,16 +19,18 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - pip install -r day-21/requirements.txt
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
   build:
     commands:
       - echo "Running tests..."
       - cd day-21/
       - echo "Building Docker image..."
-      - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
-      - docker build -t $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_REPO_NAME:$IMAGE_TAG .
+      # - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USERNAME" --password-stdin "$DOCKER_REGISTRY_URL"
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
       
   post_build:
     commands:
       - echo "Build completed successfully!"
       - echo "Pushing the Docker images..."
-      - docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
