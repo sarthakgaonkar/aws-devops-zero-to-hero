@@ -34,3 +34,9 @@ phases:
       - echo "Build completed successfully!"
       - echo "Pushing the Docker images..."
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo writing image definitions file...
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI/$REPOSITORY_NAME:$IMAGE_TAG-$CODEBUILD_BUILD_NUMBER > imagedefinitions.json
+      - cat imagedefinitions.json
+      - pwd
+artifacts:
+    files: imagedefinitions.json
